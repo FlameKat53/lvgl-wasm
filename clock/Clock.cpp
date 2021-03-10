@@ -434,14 +434,6 @@ bool Clock::Refresh() {
   lv_obj_align(batteryPlug, batteryIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
   lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
 
-  notificationState = notificatioManager.AreNewNotificationsAvailable();
-  if(notificationState.IsUpdated()) {
-    if(notificationState.Get() == true)
-      lv_label_set_text(notificationIcon, NotificationIcon::GetIcon(true));
-    else
-      lv_label_set_text(notificationIcon, NotificationIcon::GetIcon(false));
-  }
-
   currentDateTime = dateTimeController.CurrentDateTime();
 
   if(currentDateTime.IsUpdated()) {
@@ -458,18 +450,19 @@ bool Clock::Refresh() {
 
     auto hour = time.hours().count();
     auto minute = time.minutes().count();
+    auto second = time.seconds().count();
 
     char minutesChar[3];
-    sprintf(minutesChar, "%02d", static_cast<int>(minute));
+    sprintf(minutesChar, "%02d", minute);
 
     char hoursChar[3];
-    sprintf(hoursChar, "%02d", static_cast<int>(hour));
-
-    char timeStr[7];
-    sprintf(timeStr, "%c%c\n\n%c%c", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
+    sprintf(hoursChar, "%02d", hour);
 
     char shadow_timeStr[24];
     sprintf(shadow_timeStr, "#404040 %c%c#\n#404040 %c%c#", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
+
+    char timeStr[6];
+    sprintf(timeStr, "%c%c\n%c%c", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
 
     if(hoursChar[0] != displayedChar[0] || hoursChar[1] != displayedChar[1] || minutesChar[0] != displayedChar[2] || minutesChar[1] != displayedChar[3]) {
       displayedChar[0] = hoursChar[0];
@@ -477,13 +470,11 @@ bool Clock::Refresh() {
       displayedChar[2] = minutesChar[0];
       displayedChar[3] = minutesChar[1];
 
-
       lv_label_set_text(label_shadow_time, shadow_timeStr);
       lv_label_set_text(label_time, timeStr);
     }
 
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
-
       char shadow_dateStr[64];
       sprintf(shadow_dateStr, "#404040 %s# #404040 %d# #404040 %s# #404040 %d#", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
 
