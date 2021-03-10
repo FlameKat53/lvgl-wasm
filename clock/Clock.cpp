@@ -1,17 +1,13 @@
 #include "Clock.h"
 
-#include <date/date.h>
-#include <lvgl/lvgl.h>
+#include "DateTimeController.h"
+#include "../lvgl.h"
 #include <cstdio>
 #include "BatteryIcon.h"
 #include "BleIcon.h"
 #include "NotificationIcon.h"
 #include "Symbols.h"
-#include "components/battery/BatteryController.h"
-#include "components/ble/BleController.h"
-#include "components/ble/NotificationManager.h"
-#include "components/heartrate/HeartRateController.h"
-#include "../DisplayApp.h"
+#include "DisplayApp.h"
 
 using namespace Pinetime::Applications::Screens;
 extern lv_font_t jetbrains_mono_extrabold_compressed;
@@ -328,15 +324,8 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 static lv_obj_t* label_shadow_time;
 static lv_obj_t* label_shadow_date;
 
-Clock::Clock(DisplayApp* app,
-        Controllers::DateTime& dateTimeController,
-        Controllers::Battery& batteryController,
-        Controllers::Ble& bleController,
-        Controllers::NotificationManager& notificatioManager,
-        Controllers::HeartRateController& heartRateController): Screen(app), currentDateTime{{}},
-                                           dateTimeController{dateTimeController}, batteryController{batteryController},
-                                           bleController{bleController}, notificatioManager{notificatioManager},
-                                           heartRateController{heartRateController} {
+Clock::Clock(DisplayApp* app, Controllers::DateTime& dateTimeController): Screen(app), currentDateTime{{}}, dateTimeController{dateTimeController}
+{
   displayedChar[0] = 0;
   displayedChar[1] = 0;
   displayedChar[2] = 0;
@@ -511,15 +500,10 @@ bool Clock::Refresh() {
     }
   }
 
-  heartbeat = heartRateController.HeartRate();
-  heartbeatRunning = heartRateController.State() != Controllers::HeartRateController::States::Stopped;
-  if(heartbeat.IsUpdated() || heartbeatRunning.IsUpdated()) {
+  // TODO heartbeat = heartBeatController.GetValue();
+  if(heartbeat.IsUpdated()) {
     char heartbeatBuffer[4];
-    if(heartbeatRunning.Get())
-      sprintf(heartbeatBuffer, "%d", heartbeat.Get());
-    else
-      sprintf(heartbeatBuffer, "---");
-
+    sprintf(heartbeatBuffer, "%d", heartbeat.Get());
     lv_label_set_text(heartbeatValue, heartbeatBuffer);
     lv_obj_align(heartbeatIcon, lv_scr_act(), LV_ALIGN_IN_BOTTOM_LEFT, 5, -2);
     lv_obj_align(heartbeatValue, heartbeatIcon, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
