@@ -5,7 +5,6 @@
 #include <cstdio>
 #include "BatteryIcon.h"
 #include "BleIcon.h"
-#include "NotificationIcon.h"
 #include "Symbols.h"
 #include "DisplayApp.h"
 
@@ -470,7 +469,7 @@ bool Clock::Refresh() {
     sprintf(timeStr, "%c%c\n\n%c%c", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
 
     char shadow_timeStr[24];
-    sprintf(shadow_timeStr, "#404040 %c%c#\n\n#404040 %c%c#", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
+    sprintf(shadow_timeStr, "#404040 %c%c#\n#404040 %c%c#", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
 
     if(hoursChar[0] != displayedChar[0] || hoursChar[1] != displayedChar[1] || minutesChar[0] != displayedChar[2] || minutesChar[1] != displayedChar[3]) {
       displayedChar[0] = hoursChar[0];
