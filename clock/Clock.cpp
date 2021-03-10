@@ -323,8 +323,12 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 static lv_obj_t* label_shadow_time;
 static lv_obj_t* label_shadow_date;
 
-Clock::Clock(DisplayApp* app, Controllers::DateTime& dateTimeController): Screen(app), currentDateTime{{}}, dateTimeController{dateTimeController}
-{
+Clock::Clock(DisplayApp* app,
+        Controllers::DateTime& dateTimeController,
+        Controllers::Battery& batteryController,
+        Controllers::Ble& bleController) : 
+        currentDateTime{{}},
+        dateTimeController{dateTimeController}, batteryController{batteryController}, bleController{bleController} {
   displayedChar[0] = 0;
   displayedChar[1] = 0;
   displayedChar[2] = 0;
