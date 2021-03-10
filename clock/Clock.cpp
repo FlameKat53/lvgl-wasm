@@ -1,10 +1,7 @@
 #include "Clock.h"
 
-#include "DateTimeController.h"
 #include "../lvgl.h"
 #include <cstdio>
-#include "BatteryIcon.h"
-#include "BleIcon.h"
 #include "Symbols.h"
 #include "DisplayApp.h"
 
@@ -12,44 +9,6 @@ using namespace Pinetime::Applications::Screens;
 extern lv_font_t jetbrains_mono_extrabold_compressed;
 extern lv_font_t jetbrains_mono_bold_20;
 extern lv_style_t* LabelBigStyle;
-namespace {
-
-char const *DaysString[] = {
-        "",
-        "mon.",
-        "tue.",
-        "wed.",
-        "thu.",
-        "fri.",
-        "sat.",
-        "sun."
-};
-
-char const *MonthsString[] = {
-        "",
-       "jan",
-       "feb",
-       "mar",
-       "apr",
-       "may",
-       "jun",
-       "jul",
-       "aug",
-       "sep",
-       "oct",
-       "nov",
-       "dec"
-};
-
-const char *MonthToString(Pinetime::Controllers::DateTime::Months month) {
-  return MonthsString[static_cast<uint8_t>(month)];
-}
-
-const char *DayOfWeekToString(Pinetime::Controllers::DateTime::Days dayOfWeek) {
-  return DaysString[static_cast<uint8_t>(dayOfWeek)];
-}
-
-}
 
 //bitmap data
 static lv_img_dsc_t bitmap; 
@@ -345,18 +304,6 @@ Clock::Clock(DisplayApp* app,
   lv_img_set_src(img_src, &bitmap);
   lv_obj_set_pos(img_src, 0, 0);
 
-  batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(batteryIcon, Symbols::batteryFull);
-  lv_obj_align(batteryIcon, lv_scr_act(), LV_ALIGN_IN_TOP_RIGHT, -5, 2);
-
-  batteryPlug = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(batteryPlug, Symbols::plug);
-  lv_obj_align(batteryPlug, batteryIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-
-  bleIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(bleIcon, Symbols::bluetooth);
-  lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-
   label_shadow_date = lv_label_create(lv_scr_act(), nullptr);  
   lv_label_set_recolor(label_shadow_date, true);
   lv_obj_align(label_shadow_date, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 32, 1);
@@ -386,27 +333,6 @@ Clock::Clock(DisplayApp* app,
   lv_obj_set_size(backgroundLabel, 240, 240);
   lv_obj_set_pos(backgroundLabel, 0, 0);
   lv_label_set_text(backgroundLabel, "");
-
-
-  heartbeatIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(heartbeatIcon, Symbols::heartBeat);
-  lv_obj_align(heartbeatIcon, lv_scr_act(), LV_ALIGN_IN_BOTTOM_LEFT, 5, -2);
-
-  heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(heartbeatValue, "0");
-  lv_obj_align(heartbeatValue, heartbeatIcon, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-
-  heartbeatBpm = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(heartbeatBpm, "BPM");
-  lv_obj_align(heartbeatBpm, heartbeatValue, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-
-  stepValue = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(stepValue, "0");
-  lv_obj_align(stepValue, lv_scr_act(), LV_ALIGN_IN_BOTTOM_RIGHT, -5, -2);
-
-  stepIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(stepIcon, Symbols::shoe);
-  lv_obj_align(stepIcon, stepValue, LV_ALIGN_OUT_LEFT_MID, -5, 0);
 }
 
 Clock::~Clock() {
@@ -414,43 +340,6 @@ Clock::~Clock() {
 }
 
 bool Clock::Refresh() {
-  batteryPercentRemaining = batteryController.PercentRemaining();
-  if (batteryPercentRemaining.IsUpdated()) {
-    auto batteryPercent = batteryPercentRemaining.Get();
-    lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryPercent));
-    auto isCharging = batteryController.IsCharging() || batteryController.IsPowerPresent();
-    lv_label_set_text(batteryPlug, BatteryIcon::GetPlugIcon(isCharging));
-  }
-
-  bleState = bleController.IsConnected();
-  if (bleState.IsUpdated()) {
-    if(bleState.Get() == true) {
-      lv_label_set_text(bleIcon, BleIcon::GetIcon(true));
-    } else {
-      lv_label_set_text(bleIcon, BleIcon::GetIcon(false));
-    }
-  }
-  lv_obj_align(batteryIcon, lv_scr_act(), LV_ALIGN_IN_TOP_RIGHT, -5, 5);
-  lv_obj_align(batteryPlug, batteryIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-  lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-
-  currentDateTime = dateTimeController.CurrentDateTime();
-
-  if(currentDateTime.IsUpdated()) {
-    auto newDateTime = currentDateTime.Get();
-
-    auto dp = date::floor<date::days>(newDateTime);
-    auto time = date::make_time(newDateTime-dp);
-    auto yearMonthDay = date::year_month_day(dp);
-
-    auto year = (int)yearMonthDay.year();
-    auto month = static_cast<Pinetime::Controllers::DateTime::Months>((unsigned)yearMonthDay.month());
-    auto day = (unsigned)yearMonthDay.day();
-    auto dayOfWeek = static_cast<Pinetime::Controllers::DateTime::Days>(date::weekday(yearMonthDay).iso_encoding());
-
-    auto hour = time.hours().count();
-    auto minute = time.minutes().count();
-    auto second = time.seconds().count();
 
     char minutesChar[3];
     sprintf(minutesChar, "%02d", minute);
@@ -459,36 +348,27 @@ bool Clock::Refresh() {
     sprintf(hoursChar, "%02d", hour);
 
     char shadow_timeStr[24];
-    sprintf(shadow_timeStr, "#404040 %c%c#\n#404040 %c%c#", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
+    sprintf(shadow_timeStr, "#404040 00c#\n#404040 00#");
 
     char timeStr[6];
-    sprintf(timeStr, "%c%c\n%c%c", hoursChar[0],hoursChar[1],minutesChar[0], minutesChar[1]);
+    sprintf(timeStr, "00\n00");
 
-    if(hoursChar[0] != displayedChar[0] || hoursChar[1] != displayedChar[1] || minutesChar[0] != displayedChar[2] || minutesChar[1] != displayedChar[3]) {
-      displayedChar[0] = hoursChar[0];
-      displayedChar[1] = hoursChar[1];
-      displayedChar[2] = minutesChar[0];
-      displayedChar[3] = minutesChar[1];
+    lv_label_set_text(label_shadow_time, shadow_timeStr);
+    lv_label_set_text(label_time, timeStr);
 
-      lv_label_set_text(label_shadow_time, shadow_timeStr);
-      lv_label_set_text(label_time, timeStr);
-    }
+    char shadow_dateStr[64];
+    sprintf(shadow_dateStr, "#404040 %s# #404040 %d# #404040 %s# #404040 %d#", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
 
-    if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
-      char shadow_dateStr[64];
-      sprintf(shadow_dateStr, "#404040 %s# #404040 %d# #404040 %s# #404040 %d#", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
+    char dateStr[22];
+    sprintf(dateStr, "%s %d %s %d", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
 
-      char dateStr[22];
-      sprintf(dateStr, "%s %d %s %d", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
-
-      lv_label_set_text(label_shadow_date, shadow_dateStr);
-      lv_label_set_text(label_date, dateStr);
-      currentYear = year;
-      currentMonth = month;
-      currentDayOfWeek = dayOfWeek;
-      currentDay = day;
-    }
-  }
+    lv_label_set_text(label_shadow_date, shadow_dateStr);
+    lv_label_set_text(label_date, dateStr);
+    currentYear = year;
+    currentMonth = month;
+    currentDayOfWeek = dayOfWeek;
+    currentDay = day;
+}
 
   // TODO heartbeat = heartBeatController.GetValue();
   if(heartbeat.IsUpdated()) {
