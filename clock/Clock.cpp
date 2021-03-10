@@ -353,10 +353,6 @@ Clock::Clock(DisplayApp* app, Controllers::DateTime& dateTimeController): Screen
   lv_label_set_text(bleIcon, Symbols::bluetooth);
   lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
 
-  notificationIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(notificationIcon, NotificationIcon::GetIcon(false));
-  lv_obj_align(notificationIcon, bleIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-
   label_shadow_date = lv_label_create(lv_scr_act(), nullptr);  
   lv_label_set_recolor(label_shadow_date, true);
   lv_obj_align(label_shadow_date, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 32, 1);
